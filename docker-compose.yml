@@ -1,23 +1,58 @@
 version: '3.9'
 
 services:
-  pharmacy:
-    image: ana/apoteka
+  hospital:
+    image: anagavrilovic/hospital:2.0
     restart: on-failure
     networks:
       - database
     environment:
-      DB_CONNECTION_STRING_P: "host=database;port=5432;database=pharmacy;user Id=postgres;password=pharmacy;"
+      DB_CONNECTION_STRING_H: "user Id=postgres;password=hospital;server=hospital-db;port=5432;database=hospital;Integrated Security=true;Pooling=true;"
     depends_on:
+      - hospital-db
+    ports:
+      - 8082:80
+    volumes:
+      - type: volume
+        source: hospital-api-sql
+        target: /app/scripts
+
+  hospital-db:
+    image: postgres:14.1
+    restart: always
+    networks:
       - database
+    environment:
+      POSTGRES_PASSWORD: hospital
+      POSTGRES_USER: postgres
+      POSTGRES_DB: hospital
+    volumes:
+      - type: volume
+        source: hospital-database-data
+        target: /var/lib/postgresql/data
+      - type: volume
+        source: hospital-api-sql
+        target: /docker-entrypoint-initdb.d/
+    ports:
+      - 5432:5432
+
+  pharmacy:
+    image: marijakljestan/pharmacy:2.2
+    restart: on-failure
+    networks:
+      - database
+    environment:
+      DB_CONNECTION_STRING_P: "server=pharmacy-db;port=5433;database=pharmacy;user Id=postgres;password=pharmacy;"
+    depends_on:
+      - pharmacy-db
     ports:
       - 8081:80
     volumes:
       - type: volume
-        source: web-sql
+        source: pharmacy-api-sql
         target: /app/scripts
 
-  database:
+  pharmacy-db:
     image: postgres:14.1
     restart: always
     networks:
@@ -28,18 +63,21 @@ services:
       POSTGRES_DB: pharmacy
     volumes:
       - type: volume
-        source: database-data
+        source: pharmacy-database-data
         target: /var/lib/postgresql/data
       - type: volume
-        source: web-sql
+        source: pharmacy-api-sql
         target: /docker-entrypoint-initdb.d/
     ports:
-      - 5432:5432
+      - 5433:5432
 
 volumes:
-  database-data:
+  pharmacy-database-data:
     name: pharmacy-database
-  web-sql:
+  hospital-database-data:
+    name: hospital-database
+  pharmacy-api-sql:
+  hospital-api-sql:
 
 networks:
   database:
