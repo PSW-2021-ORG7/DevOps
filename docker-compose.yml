@@ -42,7 +42,7 @@ services:
     networks:
       - database
     environment:
-      DB_CONNECTION_STRING_P: "server=pharmacy-db;port=5433;database=pharmacy;user Id=postgres;password=pharmacy;"
+      DB_CONNECTION_STRING_P: "server=pharmacy-db;port=5432;database=pharmacy;user Id=postgres;password=pharmacy;"
     depends_on:
       - pharmacy-db
     ports:
@@ -71,13 +71,51 @@ services:
     ports:
       - 5433:5432
 
+  integration:
+    image: marijakljestan/integration:1.1
+    restart: on-failure
+    networks:
+      - database
+    environment:
+      DB_CONNECTION_STRING_I: "user Id=postgres;password=integration;server=integration-db;port=5432;database=integration;Integrated Security=true;Pooling=true;"
+    depends_on:
+      - integration-db
+    ports:
+      - 8088:80
+    volumes:
+      - type: volume
+        source: integration-api-sql
+        target: /app/scripts
+ 
+  integration-db:
+    image: postgres:14.1
+    restart: always
+    networks:
+      - database
+    environment:
+      POSTGRES_PASSWORD: integration
+      POSTGRES_USER: postgres
+      POSTGRES_DB: integration
+    volumes:
+      - type: volume
+        source: integration-database-data
+        target: /var/lib/postgresql/data
+      - type: volume
+        source: integration-api-sql
+        target: /docker-entrypoint-initdb.d/
+    ports:
+      - 5434:5432
+
 volumes:
   pharmacy-database-data:
     name: pharmacy-database
   hospital-database-data:
     name: hospital-database
+  integration-database-data:
+    name: integration-database
   pharmacy-api-sql:
   hospital-api-sql:
+  integration-api-sql:
 
 networks:
   database:
