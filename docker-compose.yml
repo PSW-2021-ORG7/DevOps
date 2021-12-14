@@ -1,0 +1,151 @@
+version: '3.9'
+
+services:
+  gateway:
+    build:
+      context: ./files/frontend-hospital/
+      target: gatewayWithFront
+      args:
+        - HOSPITAL_API_URL=http://127.0.0.1:8080/hospital/api/
+        - INTEGRATION_API_URL=http://127.0.0.1:8080/integration-api/
+        - PHARMACY_API_URL=http://127.0.0.1:8080/pharmacy/
+    restart: on-failure
+    networks:
+      - public
+      - application
+    ports:
+      - "8080:8080"
+    depends_on:
+      - hospital
+      - integration-api
+      - pharmacy 
+
+  hospital:
+    image: anagavrilovic/hospital:2.1
+    restart: on-failure
+    networks:
+      - application
+      - database
+    environment:
+      DB_CONNECTION_STRING_H: "user Id=postgres;password=hospital;server=hospital-db;port=5432;database=hospital;Integrated Security=true;Pooling=true;"
+    depends_on:
+      - hospital-db
+    ports:
+      - 8082:80
+    volumes:
+      - type: volume
+        source: hospital-api-sql
+        target: /app/scripts
+
+  hospital-db:
+    image: postgres:14.1
+    restart: always
+    networks:
+      - database
+    environment:
+      POSTGRES_PASSWORD: hospital
+      POSTGRES_USER: postgres
+      POSTGRES_DB: hospital
+    volumes:
+      - type: volume
+        source: hospital-database-data
+        target: /var/lib/postgresql/data
+      - type: volume
+        source: hospital-api-sql
+        target: /docker-entrypoint-initdb.d/
+    ports:
+      - 5432:5432
+
+  pharmacy:
+    image: marijakljestan/pharmacy:2.2
+    restart: on-failure
+    networks:
+      - application
+      - database
+    environment:
+      DB_CONNECTION_STRING_P: "server=pharmacy-db;port=5432;database=pharmacy;user Id=postgres;password=pharmacy;"
+    depends_on:
+      - pharmacy-db
+    ports:
+      - 8081:80
+    volumes:
+      - type: volume
+        source: pharmacy-api-sql
+        target: /app/scripts
+
+  pharmacy-db:
+    image: postgres:14.1
+    restart: always
+    networks:
+      - database
+    environment:
+      POSTGRES_PASSWORD: pharmacy
+      POSTGRES_USER: postgres
+      POSTGRES_DB: pharmacy
+    volumes:
+      - type: volume
+        source: pharmacy-database-data
+        target: /var/lib/postgresql/data
+      - type: volume
+        source: pharmacy-api-sql
+        target: /docker-entrypoint-initdb.d/
+    ports:
+      - 5433:5432
+
+  integration-api:
+    image: marijakljestan/integration:1.2
+    restart: on-failure
+    networks:
+      - application
+      - database
+    environment:
+      DB_CONNECTION_STRING_I: "user Id=postgres;password=integration;server=integration-db;port=5432;database=integration;Integrated Security=true;Pooling=true;"
+    depends_on:
+      - integration-db
+    ports:
+      - 8088:80
+    volumes:
+      - type: volume
+        source: integration-api-sql
+        target: /app/scripts
+ 
+  integration-db:
+    image: postgres:14.1
+    restart: always
+    networks:
+      - database
+    environment:
+      POSTGRES_PASSWORD: integration
+      POSTGRES_USER: postgres
+      POSTGRES_DB: integration
+    volumes:
+      - type: volume
+        source: integration-database-data
+        target: /var/lib/postgresql/data
+      - type: volume
+        source: integration-api-sql
+        target: /docker-entrypoint-initdb.d/
+    ports:
+      - 5434:5432
+
+volumes:
+  pharmacy-database-data:
+    name: pharmacy-database
+  hospital-database-data:
+    name: hospital-database
+  integration-database-data:
+    name: integration-database
+  pharmacy-api-sql:
+  hospital-api-sql:
+  integration-api-sql:
+
+networks:
+  public:
+    name: public
+    driver: bridge
+  application:
+    name: application
+    driver: bridge
+  database:
+    name: database
+    driver: bridge
