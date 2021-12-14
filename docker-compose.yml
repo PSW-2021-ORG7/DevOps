@@ -1,10 +1,30 @@
 version: '3.9'
 
 services:
-  hospital:
-    image: anagavrilovic/hospital:2.0
+  gateway:
+    build:
+      context: ./files/frontend-hospital/
+      target: gatewayWithFront
+      args:
+        - HOSPITAL_API_URL=http://127.0.0.1:8080/hospital/api/
+        - INTEGRATION_API_URL=http://127.0.0.1:8080/integration-api/
+        - PHARMACY_API_URL=http://127.0.0.1:8080/pharmacy/
     restart: on-failure
     networks:
+      - public
+      - application
+    ports:
+      - "8080:8080"
+    depends_on:
+      - hospital
+      - integration-api
+      - pharmacy 
+
+  hospital:
+    image: anagavrilovic/hospital:2.1
+    restart: on-failure
+    networks:
+      - application
       - database
     environment:
       DB_CONNECTION_STRING_H: "user Id=postgres;password=hospital;server=hospital-db;port=5432;database=hospital;Integrated Security=true;Pooling=true;"
@@ -40,6 +60,7 @@ services:
     image: marijakljestan/pharmacy:2.2
     restart: on-failure
     networks:
+      - application
       - database
     environment:
       DB_CONNECTION_STRING_P: "server=pharmacy-db;port=5432;database=pharmacy;user Id=postgres;password=pharmacy;"
@@ -71,10 +92,11 @@ services:
     ports:
       - 5433:5432
 
-  integration:
-    image: marijakljestan/integration:1.1
+  integration-api:
+    image: marijakljestan/integration:1.2
     restart: on-failure
     networks:
+      - application
       - database
     environment:
       DB_CONNECTION_STRING_I: "user Id=postgres;password=integration;server=integration-db;port=5432;database=integration;Integrated Security=true;Pooling=true;"
@@ -118,6 +140,12 @@ volumes:
   integration-api-sql:
 
 networks:
+  public:
+    name: public
+    driver: bridge
+  application:
+    name: application
+    driver: bridge
   database:
     name: database
     driver: bridge
