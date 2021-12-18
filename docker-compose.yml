@@ -3,7 +3,7 @@ version: '3.9'
 services:
   gateway:
     build:
-      context: ./files/frontend-hospital/
+      context: build/gateway/
       target: gatewayWithFront
       args:
         - HOSPITAL_API_URL=http://127.0.0.1:8080/hospital/api/
