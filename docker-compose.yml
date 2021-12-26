@@ -1,9 +1,9 @@
 version: '3.9'
 
 services:
-  gateway:
+  gateway_hospital:
     build:
-      context: build/gateway/
+      context: build/gateway_hospital/
       target: gatewayWithFront
       args:
         - HOSPITAL_API_URL=http://127.0.0.1:8080/hospital/api/
@@ -20,6 +20,21 @@ services:
       - integration-api
       - pharmacy 
 
+  gateway_pharmacy:
+    build:
+      context: build/gateway_pharmacy/
+      target: gatewayWithFront
+      args:
+        - PHARMACY_API_URL=http://127.0.0.1:8080/pharmacy/
+    restart: on-failure
+    networks:
+      - public
+      - application
+    ports:
+      - "8081:8080"
+    depends_on:
+      - pharmacy 
+
   hospital:
     image: anagavrilovic/hospital:2.1
     restart: on-failure
@@ -31,7 +46,7 @@ services:
     depends_on:
       - hospital-db
     ports:
-      - 8082:80
+      - 8086:80
     volumes:
       - type: volume
         source: hospital-api-sql
@@ -67,7 +82,7 @@ services:
     depends_on:
       - pharmacy-db
     ports:
-      - 8081:80
+      - 8087:80
     volumes:
       - type: volume
         source: pharmacy-api-sql
