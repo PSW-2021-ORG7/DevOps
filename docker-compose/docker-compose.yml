@@ -9,7 +9,7 @@ services:
         - HOSPITAL_API_URL=http://127.0.0.1:8080/hospital/api/
         - INTEGRATION_API_URL=http://127.0.0.1:8080/integration-api/
         - PHARMACY_API_URL=http://127.0.0.1:8080/pharmacy/
-    restart: on-failure
+    restart: on-failure 
     networks:
       - public
       - application
