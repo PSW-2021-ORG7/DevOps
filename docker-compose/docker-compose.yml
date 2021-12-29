@@ -1,31 +1,21 @@
-version: '3.3'
+version: '3.8'
 
 services:
   gateway_hospital:
-    build:
-      context: build/gateway_hospital/
-      target: gatewayWithFront
-      args:
-        - HOSPITAL_API_URL=http://127.0.0.1:8080/hospital/api/
-        - INTEGRATION_API_URL=http://127.0.0.1:8080/integration-api/
-        - PHARMACY_API_URL=http://127.0.0.1:8080/pharmacy/
+    image: marijakljestan/hospital-gateway
     restart: on-failure 
     networks:
       - public
       - application
     ports:
-      - "8080:8080"
+      - "8080:8080"   
     depends_on:
       - hospital
       - integration-api
       - pharmacy 
 
   gateway_pharmacy:
-    build:
-      context: build/gateway_pharmacy/
-      target: gatewayWithFront
-      args:
-        - PHARMACY_API_URL=http://127.0.0.1:8080/pharmacy/
+    image: marijakljestan/pharmacy-gateway
     restart: on-failure
     networks:
       - public
@@ -58,9 +48,9 @@ services:
     networks:
       - database
     environment:
-      POSTGRES_PASSWORD: hospital
-      POSTGRES_USER: postgres
-      POSTGRES_DB: hospital
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD_H
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB_H
     volumes:
       - type: volume
         source: hospital-database-data
@@ -70,6 +60,10 @@ services:
         target: /docker-entrypoint-initdb.d/
     ports:
       - 5432:5432
+    secrets:
+      - POSTGRES_PASSWORD_H
+      - POSTGRES_USER
+      - POSTGRES_DB_H  
 
   pharmacy:
     image: marijakljestan/pharmacy:latest
@@ -94,9 +88,9 @@ services:
     networks:
       - database
     environment:
-      POSTGRES_PASSWORD: pharmacy
-      POSTGRES_USER: postgres
-      POSTGRES_DB: pharmacy
+      PPOSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD_P
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB_P
     volumes:
       - type: volume
         source: pharmacy-database-data
@@ -106,6 +100,10 @@ services:
         target: /docker-entrypoint-initdb.d/
     ports:
       - 5433:5432
+    secrets:
+      - POSTGRES_PASSWORD_P
+      - POSTGRES_USER
+      - POSTGRES_DB_P  
 
   integration-api:
     image: marijakljestan/integration:latest
@@ -130,9 +128,9 @@ services:
     networks:
       - database
     environment:
-      POSTGRES_PASSWORD: integration
-      POSTGRES_USER: postgres
-      POSTGRES_DB: integration
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD_I
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB_I
     volumes:
       - type: volume
         source: integration-database-data
@@ -142,6 +140,10 @@ services:
         target: /docker-entrypoint-initdb.d/
     ports:
       - 5434:5432
+    secrets:
+      - POSTGRES_PASSWORD_I
+      - POSTGRES_USER
+      - POSTGRES_DB_I
 
 volumes:
   pharmacy-database-data:
@@ -164,3 +166,22 @@ networks:
   database:
     name: database
     driver: bridge
+
+secrets:
+  POSTGRES_PASSWORD_H:
+    external: true
+  POSTGRES_USER: 
+    external: true
+  POSTGRES_DB_H: 
+    external: true
+
+  POSTGRES_PASSWORD_P:
+    external: true
+  POSTGRES_DB_P: 
+    external: true
+
+  POSTGRES_PASSWORD_I:
+    external: true
+  POSTGRES_DB_I: 
+    external: true
+  
