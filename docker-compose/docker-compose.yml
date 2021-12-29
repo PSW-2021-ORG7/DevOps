@@ -46,7 +46,7 @@ services:
     depends_on:
       - hospital-db
     ports:
-      - 8086:8080
+      - 8086:80
     volumes:
       - type: volume
         source: hospital-api-sql
@@ -82,7 +82,7 @@ services:
     depends_on:
       - pharmacy-db
     ports:
-      - 8087:8080
+      - 8087:80
     volumes:
       - type: volume
         source: pharmacy-api-sql
@@ -118,7 +118,7 @@ services:
     depends_on:
       - integration-db
     ports:
-      - 8088:8080
+      - 8088:80
     volumes:
       - type: volume
         source: integration-api-sql
