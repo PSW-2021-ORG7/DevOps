@@ -1,32 +1,20 @@
-version: '3.3'
+version: '3.8'
 
 services:
   gateway_hospital:
-    build:
-      context: build/gateway_hospital/
-      target: gatewayWithFront
-      args:
-        - HOSPITAL_API_URL=http://127.0.0.1:8080/hospital/api/
-        - INTEGRATION_API_URL=http://127.0.0.1:8080/integration-api/
-        - PHARMACY_API_URL=http://127.0.0.1:8080/pharmacy/
-    restart: on-failure 
+    image: anagavrilovic/hospital-gateway:latest 
     networks:
       - public
       - application
     ports:
-      - "8080:8080"
+      - "8080:8080"   
     depends_on:
       - hospital
       - integration-api
       - pharmacy 
 
   gateway_pharmacy:
-    build:
-      context: build/gateway_pharmacy/
-      target: gatewayWithFront
-      args:
-        - PHARMACY_API_URL=http://127.0.0.1:8080/pharmacy/
-    restart: on-failure
+    image: anagavrilovic/pharmacy-gateway:latest
     networks:
       - public
       - application
@@ -37,12 +25,11 @@ services:
 
   hospital:
     image: anagavrilovic/hospital:latest
-    restart: on-failure
     networks:
       - application
       - database
     environment:
-      DB_CONNECTION_STRING_H: "user Id=postgres;password=hospital;server=hospital-db;port=5432;database=hospital;Integrated Security=true;Pooling=true;"
+      DB_CONNECTION_STRING_H: "user Id=/run/secrets/POSTGRES_USER;password=/run/secrets/POSTGRES_PASSWORD_H;server=hospital-db;port=5432;database=/run/secrets/POSTGRES_DB_H;Integrated Security=true;Pooling=true;"
     depends_on:
       - hospital-db
     ports:
@@ -54,13 +41,12 @@ services:
 
   hospital-db:
     image: postgres:14.1
-    restart: always
     networks:
       - database
     environment:
-      POSTGRES_PASSWORD: hospital
-      POSTGRES_USER: postgres
-      POSTGRES_DB: hospital
+      POSTGRES_PASSWORD: /run/secrets/POSTGRES_PASSWORD_H
+      POSTGRES_USER: /run/secrets/POSTGRES_USER
+      POSTGRES_DB: /run/secrets/POSTGRES_DB_H
     volumes:
       - type: volume
         source: hospital-database-data
@@ -70,15 +56,18 @@ services:
         target: /docker-entrypoint-initdb.d/
     ports:
       - 5432:5432
+    secrets:
+      - POSTGRES_PASSWORD_H
+      - POSTGRES_USER
+      - POSTGRES_DB_H  
 
   pharmacy:
     image: marijakljestan/pharmacy:latest
-    restart: on-failure
     networks:
       - application
       - database
     environment:
-      DB_CONNECTION_STRING_P: "server=pharmacy-db;port=5432;database=pharmacy;user Id=postgres;password=pharmacy;"
+      DB_CONNECTION_STRING_P: "server=pharmacy-db;port=5432;database=/run/secrets/POSTGRES_DB_P;user Id=/run/secrets/POSTGRES_USER;password=/run/secrets/POSTGRES_PASSWORD_P;"
     depends_on:
       - pharmacy-db
     ports:
@@ -90,13 +79,12 @@ services:
 
   pharmacy-db:
     image: postgres:14.1
-    restart: always
     networks:
       - database
     environment:
-      POSTGRES_PASSWORD: pharmacy
-      POSTGRES_USER: postgres
-      POSTGRES_DB: pharmacy
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD_P
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB_P
     volumes:
       - type: volume
         source: pharmacy-database-data
@@ -106,15 +94,18 @@ services:
         target: /docker-entrypoint-initdb.d/
     ports:
       - 5433:5432
+    secrets:
+      - POSTGRES_PASSWORD_P
+      - POSTGRES_USER
+      - POSTGRES_DB_P  
 
   integration-api:
     image: marijakljestan/integration:latest
-    restart: on-failure
     networks:
       - application
       - database
     environment:
-      DB_CONNECTION_STRING_I: "user Id=postgres;password=integration;server=integration-db;port=5432;database=integration;Integrated Security=true;Pooling=true;"
+      DB_CONNECTION_STRING_I: "user Id=/run/secrets/POSTGRES_USER;password=/run/secrets/POSTGRES_PASSWORD_I;server=integration-db;port=5432;database=/run/secrets/POSTGRES_DB_I;Integrated Security=true;Pooling=true;"
     depends_on:
       - integration-db
     ports:
@@ -126,13 +117,12 @@ services:
  
   integration-db:
     image: postgres:14.1
-    restart: always
     networks:
       - database
     environment:
-      POSTGRES_PASSWORD: integration
-      POSTGRES_USER: postgres
-      POSTGRES_DB: integration
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD_I
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB_I
     volumes:
       - type: volume
         source: integration-database-data
@@ -142,6 +132,10 @@ services:
         target: /docker-entrypoint-initdb.d/
     ports:
       - 5434:5432
+    secrets:
+      - POSTGRES_PASSWORD_I
+      - POSTGRES_USER
+      - POSTGRES_DB_I
 
 volumes:
   pharmacy-database-data:
@@ -157,10 +151,29 @@ volumes:
 networks:
   public:
     name: public
-    driver: bridge
+    driver: overlay
   application:
     name: application
-    driver: bridge
+    driver: overlay
   database:
     name: database
-    driver: bridge
+    driver: overlay
+
+secrets:
+  POSTGRES_PASSWORD_H:
+    external: true
+  POSTGRES_USER: 
+    external: true
+  POSTGRES_DB_H: 
+    external: true
+
+  POSTGRES_PASSWORD_P:
+    external: true
+  POSTGRES_DB_P: 
+    external: true
+
+  POSTGRES_PASSWORD_I:
+    external: true
+  POSTGRES_DB_I: 
+    external: true
+  
