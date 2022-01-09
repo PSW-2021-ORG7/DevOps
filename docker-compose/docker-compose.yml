@@ -44,9 +44,9 @@ services:
     networks:
       - database
     environment:
-      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD_H
-      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
-      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB_H
+      POSTGRES_PASSWORD: /run/secrets/POSTGRES_PASSWORD_H
+      POSTGRES_USER: /run/secrets/POSTGRES_USER
+      POSTGRES_DB: /run/secrets/POSTGRES_DB_H
     volumes:
       - type: volume
         source: hospital-database-data
