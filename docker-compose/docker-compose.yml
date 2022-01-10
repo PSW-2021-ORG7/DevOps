@@ -4,7 +4,6 @@ services:
   gateway_hospital:
     image: anagavrilovic/hospital-gateway:latest
     networks:
-      - public
       - application
     ports:
       - "8080:8080"   
@@ -16,7 +15,6 @@ services:
   gateway_pharmacy:
     image: anagavrilovic/pharmacy-gateway:latest
     networks:
-      - public
       - application
     ports:
       - "8081:8080"
@@ -149,9 +147,6 @@ volumes:
   integration-api-sql:
 
 networks:
-  public:
-    name: public
-    driver: overlay
   application:
     name: application
     driver: overlay
