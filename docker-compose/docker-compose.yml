@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.4'
 
 services:
   gateway_hospital:
@@ -162,14 +162,14 @@ networks:
 secrets:
   POSTGRES_PASSWORD_H:
     external: true
-  POSTGRES_USER: 
+  POSTGRES_USER:
     external: true
   POSTGRES_DB_H: 
     external: true
 
   POSTGRES_PASSWORD_P:
     external: true
-  POSTGRES_DB_P: 
+  POSTGRES_DB_P:
     external: true
 
   POSTGRES_PASSWORD_I:
