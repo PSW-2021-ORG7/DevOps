@@ -26,7 +26,7 @@ services:
     networks:
       - application
       - database
-    command: [ '/bin/sh', '-c', 'export DB_CONNECTION_STRING_H=$$(cat /run/secrets/CONNECTION_STRING) ; source /docker-entrypoint.sh' ]
+    command: [ '/bin/sh', '-c', 'export DB_CONNECTION_STRING_H=$$(cat /run/secrets/CONNECTION_STRING_H) ; source /docker-entrypoint.sh' ]
     depends_on:
       - hospital-db
     volumes:
@@ -34,8 +34,8 @@ services:
         source: hospital-api-sql
         target: /app/scripts
     secrets:
-      - source: CONNECTION_STRING
-        target: CONNECTION_STRING
+      - source: CONNECTION_STRING_H
+        target: CONNECTION_STRING_H
         uid: '101'
         gid: '443'
         mode: 0440
@@ -45,9 +45,9 @@ services:
     networks:
       - database
     environment:
-      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
-      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
-      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: database
     volumes:
       - type: volume
         source: hospital-database-data
@@ -55,17 +55,13 @@ services:
       - type: volume
         source: hospital-api-sql
         target: /docker-entrypoint-initdb.d/
-    secrets:
-      - POSTGRES_PASSWORD
-      - POSTGRES_USER
-      - POSTGRES_DB 
  
   pharmacy:
     image: marijakljestan/pharmacy:1.0-user
     networks:
       - application
       - database
-    command: [ '/bin/sh', '-c', 'export DB_CONNECTION_STRING_P=$$(cat /run/secrets/CONNECTION_STRING) ; source /docker-entrypoint.sh' ]
+    command: [ '/bin/sh', '-c', 'export DB_CONNECTION_STRING_P=$$(cat /run/secrets/CONNECTION_STRING_P) ; source /docker-entrypoint.sh' ]
     depends_on:
       - pharmacy-db
     volumes:
@@ -73,8 +69,8 @@ services:
         source: pharmacy-api-sql
         target: /app/scripts
     secrets:
-      - source: CONNECTION_STRING
-        target: CONNECTION_STRING
+      - source: CONNECTION_STRING_P
+        target: CONNECTION_STRING_P
         uid: '101'
         gid: '443'
         mode: 0440
@@ -104,7 +100,7 @@ services:
     networks:
       - application
       - database
-    command: [ '/bin/sh', '-c', 'export DB_CONNECTION_STRING_I=$$(cat /run/secrets/CONNECTION_STRING) ; source /docker-entrypoint.sh' ]
+    command: [ '/bin/sh', '-c', 'export DB_CONNECTION_STRING_I=$$(cat /run/secrets/CONNECTION_STRING_I) ; source /docker-entrypoint.sh' ]
     depends_on:
       - integration-db
     volumes:
@@ -112,8 +108,8 @@ services:
         source: integration-api-sql
         target: /app/scripts
     secrets:
-      - source: CONNECTION_STRING
-        target: CONNECTION_STRING
+      - source: CONNECTION_STRING_I
+        target: CONNECTION_STRING_I
         uid: '101'
         gid: '443'
         mode: 0440
@@ -164,5 +160,9 @@ secrets:
     external: true
   POSTGRES_DB: 
     external: true
-  CONNECTION_STRING:
+  CONNECTION_STRING_H:
+    external: true
+  CONNECTION_STRING_I:
+    external: true
+  CONNECTION_STRING_P:
     external: true
