@@ -2,7 +2,7 @@ version: '3.9'
  
 services:
   gateway_hospital:
-    image: anagavrilovic/hospital-gateway:latest
+    image: anagavrilovic/hospital-gateway:1.0-user
     networks:
       - application
     ports:
@@ -13,7 +13,7 @@ services:
       - pharmacy 
  
   gateway_pharmacy:
-    image: anagavrilovic/pharmacy-gateway:latest
+    image: anagavrilovic/pharmacy-gateway:1.0-user
     networks:
       - application
     ports:
@@ -29,8 +29,6 @@ services:
     command: [ '/bin/sh', '-c', 'export DB_CONNECTION_STRING_H=$$(cat /run/secrets/CONNECTION_STRING) ; source /docker-entrypoint.sh' ]
     depends_on:
       - hospital-db
-    ports:
-      - 8086:80
     volumes:
       - type: volume
         source: hospital-api-sql
@@ -47,9 +45,9 @@ services:
     networks:
       - database
     environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_USER: postgres
-      POSTGRES_DB: database
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB
     volumes:
       - type: volume
         source: hospital-database-data
@@ -57,19 +55,19 @@ services:
       - type: volume
         source: hospital-api-sql
         target: /docker-entrypoint-initdb.d/
-    ports:
-      - 5432:5432
+    secrets:
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
+      - POSTGRES_DB 
  
   pharmacy:
-    image: marijakljestan/pharmacy:1.1-user
+    image: marijakljestan/pharmacy:1.0-user
     networks:
       - application
       - database
     command: [ '/bin/sh', '-c', 'export DB_CONNECTION_STRING_P=$$(cat /run/secrets/CONNECTION_STRING) ; source /docker-entrypoint.sh' ]
     depends_on:
       - pharmacy-db
-    ports:
-      - 8087:80
     volumes:
       - type: volume
         source: pharmacy-api-sql
@@ -96,8 +94,6 @@ services:
       - type: volume
         source: pharmacy-api-sql
         target: /docker-entrypoint-initdb.d/
-    ports:
-      - 5433:5432
     secrets:
       - POSTGRES_PASSWORD
       - POSTGRES_USER
@@ -111,8 +107,6 @@ services:
     command: [ '/bin/sh', '-c', 'export DB_CONNECTION_STRING_I=$$(cat /run/secrets/CONNECTION_STRING) ; source /docker-entrypoint.sh' ]
     depends_on:
       - integration-db
-    ports:
-      - 8088:80
     volumes:
       - type: volume
         source: integration-api-sql
@@ -139,8 +133,6 @@ services:
       - type: volume
         source: integration-api-sql
         target: /docker-entrypoint-initdb.d/
-    ports:
-      - 5434:5432
     secrets:
       - POSTGRES_PASSWORD
       - POSTGRES_USER
